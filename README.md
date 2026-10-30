@@ -7,7 +7,7 @@ in, after scripts have run — so it works on pages that Freddie's "Add by URL" 
 ## Install (Chrome, Edge, Arc, Brave)
 
 1. Open `chrome://extensions` (or `edge://extensions`) and turn on **Developer mode**.
-2. Click **Load unpacked** and choose this `BrowserExtension` folder in the repository.
+2. Click **Load unpacked** and choose the root folder of this repository.
 3. Optionally pin the extension. The default shortcut is ⌥⇧F.
 
 After changing the extension's files, click the reload button on the extensions page and reload
@@ -35,10 +35,10 @@ JSON-LD metadata.
 
 ## How it talks to Freddie
 
-Freddie listens on `http://127.0.0.1:23240` while it runs (`BrowserClipperServer.swift`).
-The cross-platform Freddie (`FreddieGeneral`, Electron) serves the same API on the same port
-(`electron/main/clipperServer.ts`), so this extension works with either app; if both run,
-whichever started first receives the clips.
+Freddie listens on `http://127.0.0.1:23240` while it runs (`BrowserClipperServer.swift` in
+the native Freddie repository, `read-paper`). The cross-platform Freddie (`FreddieGeneral`,
+Electron) serves the same API on the same port (`electron/main/clipperServer.ts`), so this
+extension works with either app; if both run, whichever started first receives the clips.
 The background service worker makes every request, since a page's own scripts may not reach
 the loopback address:
 
@@ -46,7 +46,7 @@ the loopback address:
 |------------------|----------------------------------------------------------------------------|
 | `GET /ping`      | `{ "app": "Freddie", "version", "api": 1 }`                                 |
 | `GET /folders`   | `{ "folders": [{ "id", "name" }] }`                                         |
-| `POST /save`     | A clip (see `BrowserClip` in `BrowserClipImporter.swift`) → `{ "status": "saved" \| "exists", "paperID", "title", "openURL" }` |
+| `POST /save`     | A clip (see `BrowserClip` in read-paper's `BrowserClipImporter.swift`) → `{ "status": "saved" \| "exists", "paperID", "title", "openURL" }` |
 
 Every request must carry `X-Freddie-Clipper: 1`, a `Host` of `127.0.0.1:23240` or
 `localhost:23240`, and, if it has an `Origin`, an extension origin. Web pages cannot send the
@@ -64,6 +64,9 @@ and then waits for the server.
 
 ## Files
 
+The extension's API, request checks and duplicate rules are shared with `read-paper` and
+`FreddieGeneral`, which are expected to sit next to this repository; change them together.
+
 - `manifest.json`, `background.js`: Manifest V3 extension; the worker injects the panel and
   forwards API calls.
 - `content/clipper-core.js`: metadata, article detection and the DOM snapshot (lazy images,
@@ -71,6 +74,6 @@ and then waits for the server.
 - `content/clipper-panel.js`: the in-page panel, in a shadow root.
 - `_locales/en`, `_locales/zh_CN`: strings.
 
-Not yet supported: Safari (needs a Safari Web Extension target in the Xcode project), Firefox
-packaging, and PDFs larger than about 45 MB that the browser alone can download (Freddie then
-downloads them itself, without your sign-in).
+Not yet supported: Safari (needs a Safari Web Extension target in native Freddie's Xcode
+project), Firefox packaging, and PDFs larger than about 45 MB that the browser alone can
+download (Freddie then downloads them itself, without your sign-in).
